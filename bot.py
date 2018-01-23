@@ -78,7 +78,7 @@ def getQuote():
     if Quote.find(".") != -1: #if there is a final point, remove it
         Quote = Quote[:Quote.find(".")]
 
-    Quote = "\"" + Quote + "\" " #add a space so emojis wont get too near text, add quotes for better testing for equal ones
+    Quote += " " #add a space so emojis wont get too near text
 
     #emotes to use
     emotes = ["👅", "🤷‍", "🤷‍", "🌎", "💫", "✨", "🙈", "🙉", "🙊", "😁", "😀", "😝", "😇", "🤣", "😎", "😡", "😱", "😳", "💩", "😈", "👍", "👌", "🤞", "👊", "🌝", "🌚", "💫", "⭐", "🌈", "🔥", "🍌", "🍆", "🍾", "🍸", "🍷", "🥂", "🍻", "⚽", "🥊", "🎖", "🏵", "🖥", "🖲", "🔮", "🎈", "🎀", "🏮", "📯", "❤", "💯", "💯"] 
@@ -94,7 +94,7 @@ while True:
     quote = getQuote() 
     img = getImage()
     
-    getTwitter().update_with_media(img, status = quote.replace("\"", "")) #send tweet (without quotes)
+    getTwitter().update_with_media(img, status = quote) #send tweet (without quotes)
     print("tweet sent") 
 
     os.remove(img) #remove the image
