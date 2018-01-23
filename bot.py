@@ -39,11 +39,11 @@ def getReddit():
 
 def getImage():
     while True:
-        timeLastTwit = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
-        rPost = [post for post in getReddit().subreddit("dankmemes").submissions(start = time.mktime(timeLastTwit.timetuple()))]
+        timeLastTweet = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
+        rPost = [post for post in getReddit().subreddit("dankmemes").submissions(start = time.mktime(timeLastTweet.timetuple()))] #get only posts since last tweet, so I dont repeat
 
         if len(rPost) == 0:
-            print("No posts aviable, sleeping")
+            print("No posts aviable, sleeping") #if no posts aviable, sleep for a while
             time.sleep(TIMEIFFAIL)
         else: break
    
@@ -53,8 +53,8 @@ def getImage():
 
 def getQuote():
     while True:
-        timeLastTwit = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
-        rPost = [post for post in getReddit().subreddit("quotes").submissions(start = time.mktime(timeLastTwit.timetuple()))]
+        timeLastTweet = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
+        rPost = [post for post in getReddit().subreddit("quotes").submissions(start = time.mktime(timeLastTweet.timetuple()))] #do same as in images
 
         if len(rPost) == 0:
             print("No posts aviable, sleeping")
