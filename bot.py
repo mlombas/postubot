@@ -48,6 +48,12 @@ def getQuote():
     if Quote.find("\"") != -1: #If quote is quoted, remove quotes
         Quote = Quote[Quote.find("\"") + 1 : str(Quote).rfind("\"")]
 
+    if Quote.find("“") != -1: #check for various types of quotes
+        Quote = Quote[Quote.find("“") + 1 : str(Quote).rfind("“")]
+
+    if Quote.find("'") != -1:
+        Quote = Quote[Quote.find("'") + 1 : str(Quote).rfind("'")]
+
     if Quote.find(".") != -1:
         Quote = Quote[:Quote.find(".")]
 
