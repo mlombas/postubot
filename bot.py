@@ -54,7 +54,7 @@ def getQuote():
     Quote += " "
 
     #emotes to use
-    emotes = ["😁", "😀", "😝", "😇", "🤣", "😎", "😡", "😱", "😳", "💩", "😈", "👍", "👌", "🤞", "👊", "🌝", "🌚", "💫", "⭐", "🌈", "🔥", "🍌", "🍆", "🍾", "🍸", "🍷", "🥂", "🍻", "⚽", "🥊", "🎖", "🏵", "🖥", "🖲", "🔮", "🎈", "🎀", "🏮", "📯", "❤", "💯", "💯"] 
+    emotes = ["👅", "🤷‍♀", "🤷‍♂", "🌎", "💫", "✨", "🙈", "🙉", "🙊", "😁", "😀", "😝", "😇", "🤣", "😎", "😡", "😱", "😳", "💩", "😈", "👍", "👌", "🤞", "👊", "🌝", "🌚", "💫", "⭐", "🌈", "🔥", "🍌", "🍆", "🍾", "🍸", "🍷", "🥂", "🍻", "⚽", "🥊", "🎖", "🏵", "🖥", "🖲", "🔮", "🎈", "🎀", "🏮", "📯", "❤", "💯", "💯"] 
 
     for i in range(4):
         num = random.randint(0, len(emotes) - 1)
@@ -63,14 +63,14 @@ def getQuote():
     return Quote
 
 while True:
-    #retrieve posts in last 3 days (1 tweet per hour) to check that the quote is not repeated
+    #retrieve posts in last 3 days (1 tweet per hour) to check that the quote is not repeated, eliminate emojis
     statuses = getTwitter().user_timeline(user_id = "955467286323843076", count = 24 * 3)
     lastOnes = []
     for status in statuses:
-        lastOnes.append(status.text)
+        lastOnes.append(status.text[: status.text.rfind(" ")])
 
     quote = ""
-    while quote == "" or (quote in lastOnes):
+    while quote == "" or (quote[: quote.rfind(" ")] in lastOnes):
         quote = getQuote() #while tweet was sent or is empty, try again
 
     img = getImage()
