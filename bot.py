@@ -62,7 +62,7 @@ def getQuote():
     #emotes to use
     emotes = ["👅", "🤷‍", "🤷‍", "🌎", "💫", "✨", "🙈", "🙉", "🙊", "😁", "😀", "😝", "😇", "🤣", "😎", "😡", "😱", "😳", "💩", "😈", "👍", "👌", "🤞", "👊", "🌝", "🌚", "💫", "⭐", "🌈", "🔥", "🍌", "🍆", "🍾", "🍸", "🍷", "🥂", "🍻", "⚽", "🥊", "🎖", "🏵", "🖥", "🖲", "🔮", "🎈", "🎀", "🏮", "📯", "❤", "💯", "💯"] 
 
-    for i in range(4):
+    for i in range(random.randint(2, 5)):
         num = random.randint(0, len(emotes) - 1)
         Quote += emotes[num] + emotes[num] #add two times the same emoji
 
@@ -70,10 +70,11 @@ def getQuote():
 
 while True:
     #retrieve posts in last 3 days (1 tweet per hour) to check that the quote is not repeated, eliminate emojis
-    statuses = getTwitter().user_timeline(user_id = "955467286323843076", count = 24 * 3)
+    statuses = getTwitter().user_timeline(user_id = USER_ID, count = 24 * 3)
     lastOnes = []
     for status in statuses:
-        lastOnes.append(status.text[: status.text.rfind(" ")])
+        textWithoutLink = status.text[: status.text.rfind(" ")]
+        lastOnes.append(textWithoutLink[: textWithoutLink.rfind(" ")]) #Eliminate the space between emojist after eliminating the one between emoji and link
 
     quote = ""
     while quote == "" or (quote[: quote.rfind(" ")] in lastOnes):
