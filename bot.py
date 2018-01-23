@@ -17,6 +17,7 @@
 
 from secrets import *
 import time
+import datetime
 import os
 import random
 import urllib
@@ -25,6 +26,7 @@ import tweepy
 
 #variables
 TIMEBETWEENTWEETS = 15 * 60 
+TIMEIFFAIL = 10 * 60
 
 def getTwitter():
     auth = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
@@ -42,8 +44,16 @@ def getImage():
     return "temp.jpg"
 
 def getQuote():
-    rPost = [post for post in getReddit().subreddit("quotes").new(limit = 30)]
-    Quote = rPost[random.randint(0, 29)].title
+    while True:
+        timeLastTwit = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
+        rPost = [post for post in getReddit().subreddit("quotes").submissions(start = time.mktime(timeLastTwit.timetuple()))]
+
+        if len(rPost) == 0:
+            print("No posts aviable, sleeping")
+            time.sleep(TIMEIFFAIL)
+        else: break
+
+    Quote = rPost[random.randint(0, len(rPost) - 1)].title
 
     if Quote.find("[") != -1: #if it starts with "[", its not a quote so get another
         return getQuote()
@@ -72,17 +82,8 @@ def getQuote():
     return Quote
 
 while True:
-    #retrieve posts in last 3 days (1 tweet per hour) to check that the quote is not repeated, eliminate emojis
-    statuses = getTwitter().user_timeline(user_id = USER_ID, count = 24 * 3, tweet_mode = "extended")
-    lastOnes = []
-    for status in statuses:
-        processed = status.full_text[: status.full_text.rfind(" ")].encode("ascii", errors = "ignore").decode("ascii").strip().lower() #Eliminate link and emojis and lowercase
-        lastOnes.append(processed)
-
-    quote = ""
-    while (quote[quote.find("\"") + 1 : quote.rfind("\"")].lower() in lastOnes) or len(quote[quote.find("\"") + 1 : quote.rfind("\"")]) < 20:
-        quote = getQuote() #while tweet was sent or is empty or too short, try again
-
+    #get data
+    quote = getQuote() 
     img = getImage()
     
     getTwitter().update_with_media(img, status = quote.replace("\"", "")) #send tweet (without quotes)
