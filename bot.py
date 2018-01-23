@@ -45,6 +45,9 @@ def getQuote():
     rPost = [post for post in getReddit().subreddit("quotes").new(limit = 10)]
     Quote = rPost[random.randint(0, 9)].title
 
+    if quote.find("[request]") != -1: #if it starts with "[", its not a quote so get another
+        return getQuote()
+
     if Quote.find("\"") != -1: #If quote is quoted, remove quotes
         Quote = Quote[Quote.find("\"") + 1 : str(Quote).rfind("\"")]
 
@@ -54,7 +57,7 @@ def getQuote():
     if Quote.find("'") != -1:
         Quote = Quote[Quote.find("'") + 1 : str(Quote).rfind("'")]
 
-    if Quote.find(".") != -1:
+    if Quote.find(".") != -1: #if there is a final point, remove it
         Quote = Quote[:Quote.find(".")]
 
     Quote += " "
