@@ -62,18 +62,19 @@ def getQuote():
 
 while True:
     #retrieve posts in last 3 days (1 tweet per hour) to check that the quote is not repeated
-    statuses = getTwitter().home_timeline(count = 24 * 3)
+    statuses = getTwitter().user_timeline(user_id = "955467286323843076", count = 24 * 3)
     lastOnes = []
     for status in statuses:
         lastOnes.append(status.text)
 
     quote = ""
-    while quote == "" or not quote in lastOnes:
-        quote = getQuote()
+    while quote == "" or (quote in lastOnes):
+        quote = getQuote() #while tweet was sent or is empty, try again
+
     img = getImage()
     
     getTwitter().update_with_media(img, status = quote) #send tweet
-    print("tweet sent " + quote) 
+    print("tweet sent") 
 
     os.remove(img) #remove the image
 
