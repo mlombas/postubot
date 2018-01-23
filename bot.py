@@ -36,8 +36,8 @@ def getReddit():
     return praw.Reddit(client_id = REDDIT_CLIENT_ID, client_secret = REDDIT_CLIENT_SECRET, user_agent = REDDIT_USER_AGENT)
 
 def getImage():
-    rPost = [post for post in getReddit().subreddit("dankmemes").new(limit = 10)][random.randint(0, 9)]
-    data = urllib.request.urlretrieve(rPost.url, "temp.jpg") #get image from post and download
+    rPost = [post for post in getReddit().subreddit("dankmemes").new(limit = 10)]
+    data = urllib.request.urlretrieve(rPost[random.randint(0, 9)].url, "temp.jpg") #get image from post and download
 
     return "temp.jpg"
 
