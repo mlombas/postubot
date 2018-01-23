@@ -38,8 +38,16 @@ def getReddit():
     return praw.Reddit(client_id = REDDIT_CLIENT_ID, client_secret = REDDIT_CLIENT_SECRET, user_agent = REDDIT_USER_AGENT)
 
 def getImage():
-    rPost = [post for post in getReddit().subreddit("dankmemes").new(limit = 10)]
-    data = urllib.request.urlretrieve(rPost[random.randint(0, 9)].url, "temp.jpg") #get image from post and download
+    while True:
+        timeLastTwit = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
+        rPost = [post for post in getReddit().subreddit("dankmemes").submissions(start = time.mktime(timeLastTwit.timetuple()))]
+
+        if len(rPost) == 0:
+            print("No posts aviable, sleeping")
+            time.sleep(TIMEIFFAIL)
+        else: break
+   
+    data = urllib.request.urlretrieve(rPost[random.randint(0, len(rPost) - 1)].url, "temp.jpg") #get image from post and download
 
     return "temp.jpg"
 
@@ -53,7 +61,7 @@ def getQuote():
             time.sleep(TIMEIFFAIL)
         else: break
 
-    Quote = rPost[random.randint(0, len(rPost) - 1)].title
+    Quote = rPost[random.randint(0, len(rPost) - 1)].title #get title of post
 
     if Quote.find("[") != -1: #if it starts with "[", its not a quote so get another
         return getQuote()
