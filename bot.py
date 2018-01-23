@@ -42,10 +42,10 @@ def getImage():
     return "temp.jpg"
 
 def getQuote():
-    rPost = [post for post in getReddit().subreddit("quotes").new(limit = 10)]
-    Quote = rPost[random.randint(0, 9)].title
+    rPost = [post for post in getReddit().subreddit("quotes").new(limit = 30)]
+    Quote = rPost[random.randint(0, 29)].title
 
-    if quote.find("[request]") != -1: #if it starts with "[", its not a quote so get another
+    if Quote.find("[") != -1: #if it starts with "[", its not a quote so get another
         return getQuote()
 
     if Quote.find("\"") != -1: #If quote is quoted, remove quotes
@@ -60,7 +60,7 @@ def getQuote():
     if Quote.find(".") != -1: #if there is a final point, remove it
         Quote = Quote[:Quote.find(".")]
 
-    Quote += " "
+    Quote = "\"" + Quote + "\" " #add a space so emojis wont get too near text, add quotes for better testing for equal ones
 
     #emotes to use
     emotes = ["👅", "🤷‍", "🤷‍", "🌎", "💫", "✨", "🙈", "🙉", "🙊", "😁", "😀", "😝", "😇", "🤣", "😎", "😡", "😱", "😳", "💩", "😈", "👍", "👌", "🤞", "👊", "🌝", "🌚", "💫", "⭐", "🌈", "🔥", "🍌", "🍆", "🍾", "🍸", "🍷", "🥂", "🍻", "⚽", "🥊", "🎖", "🏵", "🖥", "🖲", "🔮", "🎈", "🎀", "🏮", "📯", "❤", "💯", "💯"] 
@@ -73,19 +73,19 @@ def getQuote():
 
 while True:
     #retrieve posts in last 3 days (1 tweet per hour) to check that the quote is not repeated, eliminate emojis
-    statuses = getTwitter().user_timeline(user_id = USER_ID, count = 24 * 3)
+    statuses = getTwitter().user_timeline(user_id = USER_ID, count = 24 * 3, tweet_mode = "extended")
     lastOnes = []
     for status in statuses:
-        textWithoutLink = status.text[: status.text.rfind(" ")]
-        lastOnes.append(textWithoutLink[: textWithoutLink.rfind(" ")]) #Eliminate the space between emojist after eliminating the one between emoji and link
+        processed = status.full_text[: status.full_text.rfind(" ")].encode("ascii", errors = "ignore").decode("ascii").strip().lower() #Eliminate link and emojis and lowercase
+        lastOnes.append(processed)
 
     quote = ""
-    while quote[: quote.rfind(" ")] == "" or (quote[: quote.rfind(" ")] in lastOnes):
-        quote = getQuote() #while tweet was sent or is empty, try again
+    while (quote[quote.find("\"") + 1 : quote.rfind("\"")].lower() in lastOnes) or len(quote[quote.find("\"") + 1 : quote.rfind("\"")]) < 20:
+        quote = getQuote() #while tweet was sent or is empty or too short, try again
 
     img = getImage()
     
-    getTwitter().update_with_media(img, status = quote) #send tweet
+    getTwitter().update_with_media(img, status = quote.replace("\"", "")) #send tweet (without quotes)
     print("tweet sent") 
 
     os.remove(img) #remove the image
