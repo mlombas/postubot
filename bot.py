@@ -42,8 +42,8 @@ def getImage():
     return "temp.jpg"
 
 def getQuote():
-    rPost = [post for post in getReddit().subreddit("quotes").new(limit = 10)][random.randint(0, 9)]
-    Quote = rPost.title
+    rPost = [post for post in getReddit().subreddit("quotes").new(limit = 10)]
+    Quote = rPost[random.randint(0, 9)].title
 
     if Quote.find("\"") != -1: #If quote is quoted, remove quotes
         Quote = Quote[Quote.find("\"") + 1 : str(Quote).rfind("\"")]
@@ -77,7 +77,7 @@ while True:
         lastOnes.append(textWithoutLink[: textWithoutLink.rfind(" ")]) #Eliminate the space between emojist after eliminating the one between emoji and link
 
     quote = ""
-    while quote == "" or (quote[: quote.rfind(" ")] in lastOnes):
+    while quote[: quote.rfind(" ")] == "" or (quote[: quote.rfind(" ")] in lastOnes):
         quote = getQuote() #while tweet was sent or is empty, try again
 
     img = getImage()
