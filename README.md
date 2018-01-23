@@ -1,4 +1,5 @@
 # postubot
-Currently a test, but may be something bigger later
+Still in develovement
 
-Sends a tweet every hour, the text is whatever you introduce via input()
+Gets an image and a quote from two reddit subreddits, and makes a
+"postureo" post (I haven't found a proper english translation)

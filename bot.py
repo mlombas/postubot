@@ -17,20 +17,64 @@
 
 from secrets import *
 import time
+import os
+import random
+import urllib
+import praw
 import tweepy
 
 #variables
-TIMEBETWEENTWEETS = 60 * 60
+TIMEBETWEENTWEETS = 15 * 60
 
 def getTwitter():
-    auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-    auth.set_access_token(ACCESS_TOKEN, ACCESS_SECRET)
+    auth = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
+    auth.set_access_token(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET)
 
     return tweepy.API(auth)
 
-#for a test, send a tweet every hour
+def getReddit():
+    return praw.Reddit(client_id = REDDIT_CLIENT_ID, client_secret = REDDIT_CLIENT_SECRET, user_agent = REDDIT_USER_AGENT)
+
+def getImage():
+    rPost = [post for post in getReddit().subreddit("dankmemes").new(limit = 10)][random.randint(0, 9)]
+    data = urllib.request.urlretrieve(rPost.url, "temp.jpg") #get image from post and download
+
+    return "temp.jpg"
+
+def getQuote():
+    rPost = [post for post in getReddit().subreddit("quotes").new(limit = 10)][random.randint(0, 9)]
+    Quote = rPost.title
+
+    if Quote.find("\"") != -1: #If quote is quoted, remove quotes
+        Quote = Quote[Quote.find("\"") + 1 : str(Quote).rfind("\"")]
+
+    if Quote.find(".") != -1:
+        Quote = Quote[:Quote.find(".")]
+
+    #emotes to use
+    emotes = ["😁", "😀", "😝", "😇", "🤣", "😎", "😡", "😱", "😳", "💩", "😈", "👍", "👌", "🤞", "👊", "🌝", "🌚", "💫", "⭐", "🌈", "🔥", "🍌", "🍆", "🍾", "🍸", "🍷", "🥂", "🍻", "⚽", "🥊", "🎖", "🏵", "🖥", "🖲", "🔮", "🎈", "🎀", "🏮", "📯", "❤", "💯", "💯"] 
+
+    for i in range(4):
+        num = random.randint(0, len(emotes) - 1)
+        Quote += emotes[num] + emotes[num] #add two times the same emoji
+
+    return Quote
+
 while True:
-    getTwitter().update_status(status = input("enter tweet to send: "))
-    print("sent")
+    #retrieve posts in last 3 days (1 tweet per hour) to check that the quote is not repeated
+    statuses = getTwitter().home_timeline(count = 24 * 3)
+    lastOnes = []
+    for status in statuses:
+        lastOnes.append(status.text)
+
+    quote = ""
+    while quote == "" or not quote in lastOnes:
+        quote = getQuote()
+    img = getImage()
+    
+    getTwitter().update_with_media(img, status = quote) #send tweet
+    print("tweet sent " + quote) 
+
+    os.remove(img) #remove the image
 
     time.sleep(TIMEBETWEENTWEETS)
