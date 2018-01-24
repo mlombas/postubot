@@ -88,10 +88,29 @@ def getQuote():
 
 while True:
     #get data
-    quote = getQuote() 
-    img = getImage()
-    
-    getTwitter().update_with_media(img, status = quote) #send tweet (without quotes)
+    try:
+        quote = getQuote() 
+        img = getImage()
+    except prawcore.exceptions.ResponseException: #If some connection fails, retry after fail time
+        print("Unable to access reddit, sleeping")
+        time.sleep(TIMEIFFAIL)
+
+        continue
+
+    if os.stat(img).st_size > 3072 * 1000: #If file is too big, return
+        print("File too big")
+
+        continue
+
+    try:
+        getTwitter().update_with_media(img, status = quote) #send tweet (without quotes)
+    except tweepy.TweepError as e:
+        if e.api_code > 500: #If its greater than 500 is some kind of twitter problem, not mine, sleep and retry
+            print("Unable to access tweeter, sleeping")
+            time.sleep(TIMEIFFAIL)
+            
+            continue
+            
     print("tweet sent") 
 
     os.remove(img) #remove the image
