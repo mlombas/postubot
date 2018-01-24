@@ -27,10 +27,10 @@ import praw
 import tweepy
 
 #variables
-TIMEBETWEENTWEETS = 15 * 60 
+TIMEBETWEENTWEETS = 1 * 60 * 60 #One hour
 TIMEIFFAIL = 5 * 60
 
-#Debug
+#Debug variable, will be eliminated later
 ISFIRST = True
 
 def getTwitter():
@@ -59,10 +59,9 @@ def getImage():
     imgPath = "temp.jpg"
     data = urllib.request.urlretrieve(rPost[random.randint(0, len(rPost) - 1)].url, imgPath) #get image from post and download
 
-    img = Image.open(imgPath)
-
-    if img.size[0] / img.size[1] > 3 or img.size[0] / img.size[1] < 0.33:
-        return getImage() #If image has bad dimensions, dont use, get another
+    with Image.open(imgPath) as img:
+        if img.size[0] / img.size[1] < 0.33 and img.size[0] / img.size[1] > 2: #If image not proportioned, get another
+            return getImage()
 
     return imgPath
 
@@ -94,7 +93,7 @@ def getQuote():
     if "." in Quote: #if there is a final point, remove it
         Quote = Quote[:Quote.rfind(".")]
 
-    if len(Quote.strip()) < 20: #If there is no quote or its too short, try again
+    if len(Quote.strip()) < 20 or len(Quote.strip()) > 240: #If there is no quote or its too short or too large, try again
         return getQuote()
 
     Quote += " " #add a space so emojis wont get too near text
@@ -108,37 +107,40 @@ def getQuote():
 
     return Quote
 
-while True:
-    #get data
-    try:
-        quote = getQuote() 
-        img = getImage()
+def runBot():
+    while True:
+        #get data
+        try:
+            quote = getQuote() 
+            img = getImage()
 
-    except prawcore.exceptions.ResponseException: #If some connection fails, retry after fail time
-        print("Unable to access reddit, sleeping")
-        time.sleep(TIMEIFFAIL)
-
-        continue
-
-    if os.stat(img).st_size > 3072 * 1000: #If file is too big, return
-        print("File too big, retrying")
-
-        continue
-
-    try:
-        getTwitter().update_with_media(img, status = quote) #send tweet (without quotes)
-
-    except tweepy.TweepError as e:
-        if e.api_code > 500: #If its greater than 500 is some kind of twitter problem, not mine, sleep and retry
-            print("Unable to access tweeter, sleeping")
+        except prawcore.exceptions.ResponseException: #If some connection fails, retry after fail time
+            print("Unable to access reddit, sleeping")
             time.sleep(TIMEIFFAIL)
-            
+
             continue
-            
-    print("tweet sent") 
 
-    os.remove(img) #remove the image
+        if os.stat(img).st_size > 3072 * 1000: #If file is too big, return
+            print("File too big, retrying")
 
-    ISFIRST = False
+            continue
 
-    time.sleep(TIMEBETWEENTWEETS)
+        try:
+            getTwitter().update_with_media(img, status = quote) #send tweet (without quotes)
+
+        except tweepy.TweepError as e:
+            if e.api_code > 500: #If its greater than 500 is some kind of twitter problem, not mine, sleep and retry
+                print("Unable to access tweeter, sleeping")
+                time.sleep(TIMEIFFAIL)
+
+                continue
+
+        print("tweet sent") 
+
+        os.remove(img) #remove the image
+
+        ISFIRST = False
+
+        time.sleep(TIMEBETWEENTWEETS)
+
+runBot()
