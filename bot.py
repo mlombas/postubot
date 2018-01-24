@@ -114,7 +114,7 @@ def getImage():
         timeLastTweet = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
 
         if ISFIRST:
-            rPost = [post for post in getReddit().subreddit("dankmemes").new(limit = 10)] #for debug pruposes, if its first tweet, get from anywhere within 10 last posts
+            rPost = [post for post in getReddit().subreddit("dankmemes").new(limit = 50)] #for debug pruposes, if its first tweet, get from anywhere within 10 last posts
         else:
             rPost = [post for post in getReddit().subreddit("dankmemes").submissions(start = time.mktime(timeLastTweet.timetuple()))] #do same as in images
 
@@ -144,7 +144,7 @@ def getQuote():
         timeLastTweet = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
 
         if ISFIRST:
-            rPost = [post for post in getReddit().subreddit("quotes").new(limit = 10)] #for debug pruposes, if its first tweet, get from anywhere within 10 last posts
+            rPost = [post for post in getReddit().subreddit("quotes").new(limit = 50)] #for debug pruposes, if its first tweet, get from anywhere within 10 last posts
         else:
             rPost = [post for post in getReddit().subreddit("quotes").submissions(start = time.mktime(timeLastTweet.timetuple()))] #do same as in images
             
@@ -185,7 +185,7 @@ def runBot():
     while True:
         #get data
         try:
-            quote = getQuote() 
+            quote = getQuote()
             img = getImage()
 
         except prawcore.exceptions.ResponseException: #If some connection fails, retry after fail time
