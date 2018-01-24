@@ -92,9 +92,9 @@ def getQuote():
         Quote = Quote[Quote.find("“") + 1 : str(Quote).rfind("“")]
 
     if "." in Quote: #if there is a final point, remove it
-        Quote = Quote[:Quote.rfind(".") - 1]
+        Quote = Quote[:Quote.rfind(".")]
 
-    if len(Quote.strip()) == 0: #If there is no quote (only whitespace), try again
+    if len(Quote.strip()) < 20: #If there is no quote or its too short, try again
         return getQuote()
 
     Quote += " " #add a space so emojis wont get too near text
@@ -113,6 +113,7 @@ while True:
     try:
         quote = getQuote() 
         img = getImage()
+
     except prawcore.exceptions.ResponseException: #If some connection fails, retry after fail time
         print("Unable to access reddit, sleeping")
         time.sleep(TIMEIFFAIL)
@@ -126,6 +127,7 @@ while True:
 
     try:
         getTwitter().update_with_media(img, status = quote) #send tweet (without quotes)
+
     except tweepy.TweepError as e:
         if e.api_code > 500: #If its greater than 500 is some kind of twitter problem, not mine, sleep and retry
             print("Unable to access tweeter, sleeping")
