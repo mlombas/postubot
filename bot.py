@@ -96,6 +96,4 @@ while True:
 
     os.remove(img) #remove the image
 
-
-
     time.sleep(TIMEBETWEENTWEETS)
