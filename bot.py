@@ -113,7 +113,11 @@ while True:
         continue
 
     if os.stat(img).st_size > 3072 * 1000: #If file is too big, return
+<<<<<<< HEAD
         print("File too big, retrying")
+=======
+        print("File too big")
+>>>>>>> c79ac70d0c19db1e5c4825a2be372c6d8924bd5b
 
         continue
 
@@ -121,11 +125,19 @@ while True:
         getTwitter().update_with_media(img, status = quote) #send tweet (without quotes)
     except tweepy.TweepError as e:
         if e.api_code > 500: #If its greater than 500 is some kind of twitter problem, not mine, sleep and retry
+<<<<<<< HEAD
             print("Unable to access twitter, sleeping")
             time.sleep(TIMEIFFAIL)
             
             continue
 
+=======
+            print("Unable to access tweeter, sleeping")
+            time.sleep(TIMEIFFAIL)
+            
+            continue
+            
+>>>>>>> c79ac70d0c19db1e5c4825a2be372c6d8924bd5b
     print("tweet sent") 
 
     os.remove(img) #remove the image
