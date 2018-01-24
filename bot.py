@@ -26,7 +26,7 @@ import tweepy
 
 #variables
 TIMEBETWEENTWEETS = 15 * 60 
-TIMEIFFAIL = 10 * 60
+TIMEIFFAIL = 5 * 60
 
 def getTwitter():
     auth = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
@@ -43,7 +43,7 @@ def getImage():
         rPost = [post for post in getReddit().subreddit("dankmemes").submissions(start = time.mktime(timeLastTweet.timetuple()))] #get only posts since last tweet, so I dont repeat
 
         if len(rPost) == 0:
-            print("No posts aviable, sleeping") #if no posts aviable, sleep for a while
+            print("No posts aviable in dankmemes, sleeping") #if no posts aviable, sleep for a while
             time.sleep(TIMEIFFAIL)
         else: break
    
@@ -55,9 +55,9 @@ def getQuote():
     while True:
         timeLastTweet = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
         rPost = [post for post in getReddit().subreddit("quotes").submissions(start = time.mktime(timeLastTweet.timetuple()))] #do same as in images
-
+            
         if len(rPost) == 0:
-            print("No posts aviable, sleeping")
+            print("No posts aviable in quotes, sleeping")
             time.sleep(TIMEIFFAIL)
         else: break
 
@@ -71,9 +71,6 @@ def getQuote():
 
     if Quote.find("“") != -1: #check for various types of quotes
         Quote = Quote[Quote.find("“") + 1 : str(Quote).rfind("“")]
-
-    if Quote.find("'") != -1:
-        Quote = Quote[Quote.find("'") + 1 : str(Quote).rfind("'")]
 
     if Quote.find(".") != -1: #if there is a final point, remove it
         Quote = Quote[:Quote.find(".")]
@@ -98,5 +95,7 @@ while True:
     print("tweet sent") 
 
     os.remove(img) #remove the image
+
+
 
     time.sleep(TIMEBETWEENTWEETS)
