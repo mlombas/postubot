@@ -16,6 +16,7 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from secrets import *
+from PIL import Image
 import time
 import datetime
 import os
@@ -54,10 +55,16 @@ def getImage():
             print("No posts aviable in dankmemes, sleeping") #if no posts aviable, sleep for a while
             time.sleep(TIMEIFFAIL)
         else: break
-   
-    data = urllib.request.urlretrieve(rPost[random.randint(0, len(rPost) - 1)].url, "temp.jpg") #get image from post and download
 
-    return "temp.jpg"
+    imgPath = "temp.jpg"
+    data = urllib.request.urlretrieve(rPost[random.randint(0, len(rPost) - 1)].url, imgPath) #get image from post and download
+
+    img = Image.open(imgPath)
+
+    if img.size[0] / img.size[1] > 3 or img.size[0] / img.size[1] < 0.33:
+        return getImage() #If image has bad dimensions, dont use, get another
+
+    return imgPath
 
 def getQuote():
     while True:
@@ -113,11 +120,7 @@ while True:
         continue
 
     if os.stat(img).st_size > 3072 * 1000: #If file is too big, return
-<<<<<<< HEAD
         print("File too big, retrying")
-=======
-        print("File too big")
->>>>>>> c79ac70d0c19db1e5c4825a2be372c6d8924bd5b
 
         continue
 
@@ -125,19 +128,11 @@ while True:
         getTwitter().update_with_media(img, status = quote) #send tweet (without quotes)
     except tweepy.TweepError as e:
         if e.api_code > 500: #If its greater than 500 is some kind of twitter problem, not mine, sleep and retry
-<<<<<<< HEAD
-            print("Unable to access twitter, sleeping")
-            time.sleep(TIMEIFFAIL)
-            
-            continue
-
-=======
             print("Unable to access tweeter, sleeping")
             time.sleep(TIMEIFFAIL)
             
             continue
             
->>>>>>> c79ac70d0c19db1e5c4825a2be372c6d8924bd5b
     print("tweet sent") 
 
     os.remove(img) #remove the image
