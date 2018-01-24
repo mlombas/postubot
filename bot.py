@@ -42,6 +42,71 @@ def getTwitter():
 def getReddit():
     return praw.Reddit(client_id = REDDIT_CLIENT_ID, client_secret = REDDIT_CLIENT_SECRET, user_agent = REDDIT_USER_AGENT)
 
+def getClip(img):
+    rgbImg = img.copy().convert("RGB")
+    rgbPix = rgbImg.load()
+
+    bounds = [0, 0, rgbImg.size[0], rgbImg.size[1]]
+
+    #From top to bottom
+    for y in range(1, rgbImg.size[1]): #Loop through every pixel
+        for x in range(0, rgbImg.size[0]):
+            Found = False
+
+            R, G, B = rgbPix[x, y]
+            diff = (abs(R - G) + abs(G - B) + abs(R - B)) / 3 #Get average difference between pixels
+            if diff > 10: #If difference its not too big, its a scale of gray
+                bounds[1] = y
+                Found = True
+                break
+            
+        if Found:
+            break   
+        
+    #From bottom to top
+    for y in range(rgbImg.size[1] - 1, 0, -1):
+        for x in range(0, rgbImg.size[0]):
+            Found = False
+
+            R, G, B = rgbPix[x, y]
+            diff = (abs(R - G) + abs(G - B) + abs(R - B)) / 3
+            if diff > 10:
+                bounds[3] = y
+                Found = True
+                break
+            
+        if Found: break
+
+    #From left to right
+    for x in range(0, rgbImg.size[0]):
+        for y in range(1, rgbImg.size[1]):
+            Found = False
+            
+            R, G, B = rgbPix[x, y]
+            diff = (abs(R - G) + abs(G - B) + abs(R - B)) / 3
+            if diff > 10:
+                bounds[0] = x
+                Found = True
+                break
+            
+        if Found: break
+
+    #From right to left
+    for x in range(rgbImg.size[0] - 1, 0, -1):
+        for y in range(0, rgbImg.size[1]):
+            Found = False
+            
+            R, G, B = rgbPix[x, y]
+            diff = (abs(R - G) + abs(G - B) + abs(R - B)) / 3
+            if diff > 10:
+                bounds[2] = x
+                Found = True
+                break
+            
+        if Found: break
+
+    return  bounds
+
 def getImage():
     while True:
         timeLastTweet = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
@@ -56,14 +121,21 @@ def getImage():
             time.sleep(TIMEIFFAIL)
         else: break
 
-    imgPath = "temp.jpg"
-    data = urllib.request.urlretrieve(rPost[random.randint(0, len(rPost) - 1)].url, imgPath) #get image from post and download
+    imgPathJ = "temp.jpg"
+    imgPathP = "temp.png"
+    data = urllib.request.urlretrieve(rPost[random.randint(0, len(rPost) - 1)].url, imgPathJ) #get image from post and download
 
-    with Image.open(imgPath) as img:
-        if img.size[0] / img.size[1] < 0.33 and img.size[0] / img.size[1] > 2: #If image not proportioned, get another
+    with Image.open(imgPathJ) as img:
+        clip = getClip(img)
+        clipped = img.crop(clip)
+
+        if clipped.size[0] / clipped.size[1] < 0.33 and clipped.size[0] / clipped.size[1] > 2: #If cropped image isnt valid, get another
             return getImage()
 
-    return imgPath
+        clipped.save(imgPathP)
+
+        os.remove(imgPathJ) #Remove jpg
+        return imgPathP
 
 def getQuote():
     while True:
