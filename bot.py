@@ -21,12 +21,16 @@ import datetime
 import os
 import random
 import urllib
+import prawcore
 import praw
 import tweepy
 
 #variables
 TIMEBETWEENTWEETS = 15 * 60 
 TIMEIFFAIL = 5 * 60
+
+#Debug
+ISFIRST = True
 
 def getTwitter():
     auth = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
@@ -40,7 +44,11 @@ def getReddit():
 def getImage():
     while True:
         timeLastTweet = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
-        rPost = [post for post in getReddit().subreddit("dankmemes").submissions(start = time.mktime(timeLastTweet.timetuple()))] #get only posts since last tweet, so I dont repeat
+
+        if ISFIRST:
+            rPost = [post for post in getReddit().subreddit("dankmemes").new(limit = 10)] #for debug pruposes, if its first tweet, get from anywhere within 10 last posts
+        else:
+            rPost = [post for post in getReddit().subreddit("dankmemes").submissions(start = time.mktime(timeLastTweet.timetuple()))] #do same as in images
 
         if len(rPost) == 0:
             print("No posts aviable in dankmemes, sleeping") #if no posts aviable, sleep for a while
@@ -54,7 +62,11 @@ def getImage():
 def getQuote():
     while True:
         timeLastTweet = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
-        rPost = [post for post in getReddit().subreddit("quotes").submissions(start = time.mktime(timeLastTweet.timetuple()))] #do same as in images
+
+        if ISFIRST:
+            rPost = [post for post in getReddit().subreddit("quotes").new(limit = 10)] #for debug pruposes, if its first tweet, get from anywhere within 10 last posts
+        else:
+            rPost = [post for post in getReddit().subreddit("quotes").submissions(start = time.mktime(timeLastTweet.timetuple()))] #do same as in images
             
         if len(rPost) == 0:
             print("No posts aviable in quotes, sleeping")
@@ -63,17 +75,17 @@ def getQuote():
 
     Quote = rPost[random.randint(0, len(rPost) - 1)].title #get title of post
 
-    if Quote.find("[") != -1: #if it starts with "[", its not a quote so get another
+    if "[" in Quote: #if it starts with "[", its not a quote so get another
         return getQuote()
 
-    if Quote.find("\"") != -1: #If quote is quoted, remove quotes
+    if "\"" in Quote: #If quote is quoted, remove quotes
         Quote = Quote[Quote.find("\"") + 1 : str(Quote).rfind("\"")]
 
-    if Quote.find("“") != -1: #check for various types of quotes
+    if "“" in Quote: #check for various types of quotes
         Quote = Quote[Quote.find("“") + 1 : str(Quote).rfind("“")]
 
-    if Quote.find(".") != -1: #if there is a final point, remove it
-        Quote = Quote[:Quote.find(".")]
+    if "." in Quote: #if there is a final point, remove it
+        Quote = Quote[:Quote.rfind(".")]
 
     Quote += " " #add a space so emojis wont get too near text
 
@@ -88,14 +100,33 @@ def getQuote():
 
 while True:
     #get data
-    quote = getQuote() 
-    img = getImage()
-    
-    getTwitter().update_with_media(img, status = quote) #send tweet (without quotes)
+    try:
+        quote = getQuote() 
+        img = getImage()
+    except prawcore.exceptions.ResponseException: #If some connection fails, retry after fail time
+        print("Unable to access reddit, sleeping")
+        time.sleep(TIMEIFFAIL)
+
+        continue
+
+    if os.stat(img).st_size > 3072 * 1000: #If file is too big, return
+        print("File too big")
+
+        continue
+
+    try:
+        getTwitter().update_with_media(img, status = quote) #send tweet (without quotes)
+    except tweepy.TweepError as e:
+        if e.api_code > 500: #If its greater than 500 is some kind of twitter problem, not mine, sleep and retry
+            print("Unable to access tweeter, sleeping")
+            time.sleep(TIMEIFFAIL)
+            
+            continue
+
     print("tweet sent") 
 
     os.remove(img) #remove the image
 
-
+    ISFIRST = False
 
     time.sleep(TIMEBETWEENTWEETS)
