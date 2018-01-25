@@ -17,7 +17,7 @@
 
 #@postubot on twitter
 
-from secrets import *
+from secrets import * #This is the secrets file, add yours, it must have the values of the consumers secret and key and access token and secret and reddits client id, client secret and user agent under the names below, in the getTwitter() and getReddit() functions
 from PIL import Image
 import time
 import datetime
