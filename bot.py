@@ -32,8 +32,10 @@ import tweepy
 TIMEBETWEENTWEETS = 1 * 60 * 60 #One hour
 TIMEIFFAIL = 5 * 60
 
-#Debug variable, will be eliminated later
-ISFIRST = True
+triedIds = []
+
+#To get posts from hot instead of new
+getHot = True
 
 def getTwitter():
     auth = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
@@ -111,27 +113,44 @@ def getClip(img):
 
 def getImage():
     while True:
+        global getHot
+        global triedIds
+
+        tries = 0
         timeLastTweet = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
 
-        if ISFIRST:
-            rPost = [post for post in getReddit().subreddit("dankmemes").new(limit = 50)] #for debug pruposes, if its first tweet, get from anywhere within 10 last posts
+        if getHot:
+            rPost = [post for post in getReddit().subreddit("dankmemes").hot(limit = 50)] #Get posts from HOT if we want to
         else:
             rPost = [post for post in getReddit().subreddit("dankmemes").submissions(start = time.mktime(timeLastTweet.timetuple()))] #do same as in images
 
+        for submission in rPost: #Remove the tried ids
+            if submission.id in triedIds:
+                rPost.remove(submission.id)
+
         if len(rPost) == 0:
             print("No posts aviable in dankmemes, sleeping") #if no posts aviable, sleep for a while
+
+            tries += 1
+            if tries > TIMEBETWEENTWEETS / TIMEIFFAIL:
+                getHot = True
+                continue
+
             time.sleep(TIMEIFFAIL)
         else: break
 
+    post = rPost[random.randint(0, len(rPost) - 1)]
+
     imgPathJ = "temp.jpg"
     imgPathP = "temp.png"
-    data = urllib.request.urlretrieve(rPost[random.randint(0, len(rPost) - 1)].url, imgPathJ) #get image from post and download
+    data = urllib.request.urlretrieve(post.url, imgPathJ) #get image from post and download
 
     with Image.open(imgPathJ) as img:
         clip = getClip(img)
         clipped = img.crop(clip)
 
         if clipped.size[0] / clipped.size[1] < 0.33 and clipped.size[0] / clipped.size[1] > 2: #If cropped image isnt valid, get another
+            triedIds.append(post.id)
             return getImage()
 
         clipped.save(imgPathP)
@@ -141,21 +160,37 @@ def getImage():
 
 def getQuote():
     while True:
-        timeLastTweet = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
+        global getHot
+        global triedIds
 
-        if ISFIRST:
-            rPost = [post for post in getReddit().subreddit("quotes").new(limit = 50)] #for debug pruposes, if its first tweet, get from anywhere within 10 last posts
+        tries = 0
+        timeLastTweet = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
+    
+        if getHot:
+            rPost = [post for post in getReddit().subreddit("quotes").hot(limit = 50)] #Same as images
         else:
             rPost = [post for post in getReddit().subreddit("quotes").submissions(start = time.mktime(timeLastTweet.timetuple()))] #do same as in images
+
+        for submission in rPost:
+            if submission.id in triedIds:
+                rPost.remove(submission.id)
             
         if len(rPost) == 0:
             print("No posts aviable in quotes, sleeping")
+
+            tries += 1
+            if tries > TIMEBETWEENTWEETS / TIMEIFFAIL: #If we tried a lot of times, get Hot posts instead
+                getHot = True
+                continue
+
             time.sleep(TIMEIFFAIL)
         else: break
 
-    Quote = rPost[random.randint(0, len(rPost) - 1)].title #get title of post
+    post = rPost[random.randint(0, len(rPost) - 1)]
+    Quote = post.title #get title of post
 
     if "[" in Quote: #if it starts with "[", its not a quote so get another
+        triedIds.append(post.id) #Add this to tried so we dont get in an infinite loop
         return getQuote()
 
     if "\"" in Quote: #If quote is quoted, remove quotes
@@ -168,6 +203,7 @@ def getQuote():
         Quote = Quote[:Quote.rfind(".")]
 
     if len(Quote.strip()) < 20 or len(Quote.strip()) > 240: #If there is no quote or its too short or too large, try again
+        triedIds.append(post.id)
         return getQuote()
 
     Quote += " " #add a space so emojis wont get too near text
@@ -213,7 +249,9 @@ def runBot():
 
         os.remove(img) #remove the image
 
-        ISFIRST = False
+        triedIds = [] #reset tried ids
+
+        getHot = False
 
         time.sleep(TIMEBETWEENTWEETS)
 
