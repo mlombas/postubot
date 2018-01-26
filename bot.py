@@ -58,8 +58,8 @@ def getClip(img):
             Found = False
 
             R, G, B = rgbPix[x, y]
-            diff = (abs(R - G) + abs(G - B) + abs(R - B)) / 3 #Get average difference between pixels
-            if diff > 10: #If difference its not too big, its a scale of gray
+            diff = max(abs(R - G), abs(G - B), abs(R - B)) #Get max difference between pixels
+            if diff > 60: #If difference its not too big, its a scale of gray
                 bounds[1] = y
                 Found = True
                 break
@@ -73,8 +73,8 @@ def getClip(img):
             Found = False
 
             R, G, B = rgbPix[x, y]
-            diff = (abs(R - G) + abs(G - B) + abs(R - B)) / 3
-            if diff > 10:
+            diff = max(abs(R - G), abs(G - B), abs(R - B))
+            if diff > 60:
                 bounds[3] = y
                 Found = True
                 break
@@ -87,8 +87,8 @@ def getClip(img):
             Found = False
             
             R, G, B = rgbPix[x, y]
-            diff = (abs(R - G) + abs(G - B) + abs(R - B)) / 3
-            if diff > 10:
+            diff = max(abs(R - G), abs(G - B), abs(R - B))
+            if diff > 60:
                 bounds[0] = x
                 Found = True
                 break
@@ -101,8 +101,8 @@ def getClip(img):
             Found = False
             
             R, G, B = rgbPix[x, y]
-            diff = (abs(R - G) + abs(G - B) + abs(R - B)) / 3
-            if diff > 10:
+            diff = max(abs(R - G), abs(G - B), abs(R - B))
+            if diff > 60:
                 bounds[2] = x
                 Found = True
                 break
@@ -140,6 +140,7 @@ def getImage():
         else: break
 
     post = rPost[random.randint(0, len(rPost) - 1)]
+    triedIds.append(post.id)
 
     imgPathJ = "temp.jpg"
     imgPathP = "temp.png"
@@ -149,8 +150,7 @@ def getImage():
         clip = getClip(img)
         clipped = img.crop(clip)
 
-        if clipped.size[0] / clipped.size[1] < 0.33 and clipped.size[0] / clipped.size[1] > 2: #If cropped image isnt valid, get another
-            triedIds.append(post.id)
+        if clipped.size[0] / clipped.size[1] < 0.2 and clipped.size[0] / clipped.size[1] > 5: #If cropped image isnt valid, get another
             return getImage()
 
         clipped.save(imgPathP)
@@ -187,6 +187,8 @@ def getQuote():
         else: break
 
     post = rPost[random.randint(0, len(rPost) - 1)]
+    triedIds.append(post.id)
+
     Quote = post.title #get title of post
 
     if "[" in Quote: #if it starts with "[", its not a quote so get another
@@ -203,7 +205,6 @@ def getQuote():
         Quote = Quote[:Quote.rfind(".")]
 
     if len(Quote.strip()) < 20 or len(Quote.strip()) > 240: #If there is no quote or its too short or too large, try again
-        triedIds.append(post.id)
         return getQuote()
 
     Quote += " " #add a space so emojis wont get too near text
@@ -239,11 +240,12 @@ def runBot():
             getTwitter().update_with_media(img, status = quote) #send tweet (without quotes)
 
         except tweepy.TweepError as e:
-            if e.api_code > 500: #If its greater than 500 is some kind of twitter problem, not mine, sleep and retry
-                print("Unable to access tweeter, sleeping")
-                time.sleep(TIMEIFFAIL)
+            if e.api_code:
+                if e.api_code > 500: #If its greater than 500 is some kind of twitter problem, not mine, sleep and retry
+                    print("Unable to access tweeter, sleeping")
+                    time.sleep(TIMEIFFAIL)
 
-                continue
+                    continue
 
         print("tweet sent") 
 
