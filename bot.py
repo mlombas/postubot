@@ -46,7 +46,7 @@ def getTwitter():
 def getReddit():
     return praw.Reddit(client_id = REDDIT_CLIENT_ID, client_secret = REDDIT_CLIENT_SECRET, user_agent = REDDIT_USER_AGENT)
 
-def getClip(img):
+def getClip(img, treshold = 0.15):
     rgbImg = img.copy().convert("RGB")
     rgbPix = rgbImg.load()
 
@@ -54,60 +54,59 @@ def getClip(img):
 
     #From top to bottom
     for y in range(1, rgbImg.size[1]): #Loop through every pixel
-        for x in range(0, rgbImg.size[0]):
-            Found = False
+        Found = 0
 
+        for x in range(0, rgbImg.size[0]):
             R, G, B = rgbPix[x, y]
             diff = max(abs(R - G), abs(G - B), abs(R - B)) #Get max difference between pixels
-            if diff > 60: #If difference its not too big, its a scale of gray
-                bounds[1] = y
-                Found = True
-                break
+            if diff > 60: #If difference its not too big, its a scale of gray    
+                Found += 1
             
-        if Found:
+        if Found / rgbImg.size[1] > treshold: #If there are too much non gray pixels, we found the crop point
+            bounds[1] = y
             break   
         
     #From bottom to top
     for y in range(rgbImg.size[1] - 1, 0, -1):
-        for x in range(0, rgbImg.size[0]):
-            Found = False
+        Found = 0
 
+        for x in range(0, rgbImg.size[0]):
             R, G, B = rgbPix[x, y]
             diff = max(abs(R - G), abs(G - B), abs(R - B))
             if diff > 60:
-                bounds[3] = y
-                Found = True
-                break
+                Found += 1
             
-        if Found: break
+        if Found / rgbImg.size[1] > treshold:
+            bounds[3] = y
+            break
 
     #From left to right
     for x in range(0, rgbImg.size[0]):
-        for y in range(1, rgbImg.size[1]):
-            Found = False
-            
+        Found = 0
+
+        for y in range(1, rgbImg.size[1]):            
             R, G, B = rgbPix[x, y]
             diff = max(abs(R - G), abs(G - B), abs(R - B))
             if diff > 60:
-                bounds[0] = x
-                Found = True
-                break
+                Found += 1
             
-        if Found: break
+        if Found / rgbImg.size[0] > treshold:
+            bounds[0] = x
+            break
 
     #From right to left
     for x in range(rgbImg.size[0] - 1, 0, -1):
-        for y in range(0, rgbImg.size[1]):
-            Found = False
-            
+        Found = 0
+
+        for y in range(0, rgbImg.size[1]):      
             R, G, B = rgbPix[x, y]
             diff = max(abs(R - G), abs(G - B), abs(R - B))
             if diff > 60:
-                bounds[2] = x
-                Found = True
-                break
+                Found += 1
             
-        if Found: break
+        if Found / rgbImg.size[0] > treshold:
+            bounds[2] = x
+            break
 
     return  bounds
 
@@ -150,8 +149,11 @@ def getImage():
         clip = getClip(img)
         clipped = img.crop(clip)
 
-        if clipped.size[0] / clipped.size[1] < 0.2 and clipped.size[0] / clipped.size[1] > 5: #If cropped image isnt valid, get another
-            return getImage()
+        if min(clipped.size[0], clipped.size[1]) < 300: #If image too small, get another
+                return getImage()
+
+        if clipped.size[0] / clipped.size[1] < 0.5 and clipped.size[0] / clipped.size[1] > 2: #If cropped image is not proportioned
+            clipped = clipped.crop([0, 0, min(clipped.size[0], clipped.size[1]), min(clipped.size[0], clipped.size[1])]) #if not too small, clip it
 
         clipped.save(imgPathP)
 
