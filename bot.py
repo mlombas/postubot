@@ -243,7 +243,7 @@ def runBot():
 
         except tweepy.TweepError as e:
             if e.api_code:
-                if e.api_code > 500: #If its greater than 500 is some kind of twitter problem, not mine, sleep and retry
+                if e.api_code >= 500: #If its greater than o equal 500 is some kind of twitter problem, not mine, sleep and retry
                     print("Unable to access tweeter, sleeping")
                     time.sleep(TIMEIFFAIL)
 
