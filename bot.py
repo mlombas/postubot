@@ -200,7 +200,7 @@ def getQuote():
     if "\"" in Quote: #If quote is quoted, remove quotes
         Quote = Quote[Quote.find("\"") + 1 : str(Quote).rfind("\"")]
 
-    if "“".encode() in Quote: #check for various types of quotes
+    if "“" in Quote: #check for various types of quotes
         Quote = Quote[Quote.find("“") + 1 : str(Quote).rfind("“")]
 
     if "." in Quote: #if there is a final point, remove it
