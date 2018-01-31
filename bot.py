@@ -30,7 +30,7 @@ import tweepy
 
 #variables
 TIMEBETWEENTWEETS = 1 * 60 * 60 #One hour
-TIMEIFFAIL = 5 * 60
+TIMEIFFAIL = 5 * 60 #Five mins
 
 triedIds = []
 
@@ -175,7 +175,7 @@ def getQuote():
 
         for submission in rPost:
             if submission.id in triedIds:
-                rPost.remove(submission.id)
+                triedIds.remove(submission.id)
             
         if len(rPost) == 0:
             print("No posts aviable in quotes, sleeping")
@@ -244,7 +244,7 @@ def runBot():
         except tweepy.TweepError as e:
             if e.api_code:
                 if e.api_code >= 500: #If its greater than o equal 500 is some kind of twitter problem, not mine, sleep and retry
-                    print("Unable to access tweeter, sleeping")
+                    print("Unable to access twitter, sleeping")
                     time.sleep(TIMEIFFAIL)
 
                     continue
