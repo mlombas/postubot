@@ -28,14 +28,13 @@ import prawcore
 import praw
 import tweepy
 
-#variables
+#Globals
 TIMEBETWEENTWEETS = 1 * 60 * 60 #One hour
 TIMEIFFAIL = 5 * 60 #Five mins
 
 triedIds = []
 
-#To get posts from hot instead of new
-getHot = True
+getHot = True #To get posts from hot instead of new
 
 def getTwitter():
     auth = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
@@ -50,7 +49,7 @@ def getClip(img, treshold = 0.15):
     rgbImg = img.copy().convert("RGB")
     rgbPix = rgbImg.load()
 
-    bounds = [x for x in rgbImg.getbbox()]
+    bounds = [x for x in rgbImg.getbbox()] #get bounds
 
     #From top to bottom
     for y in range(1, rgbImg.size[1]): #Loop through every pixel
@@ -121,29 +120,29 @@ def getImage():
         if getHot:
             rPost = [post for post in getReddit().subreddit("dankmemes").hot(limit = 50)] #Get posts from HOT if we want to
         else:
-            rPost = [post for post in getReddit().subreddit("dankmemes").submissions(start = time.mktime(timeLastTweet.timetuple()))] #do same as in images
+            rPost = [post for post in getReddit().subreddit("dankmemes").submissions(start = time.mktime(timeLastTweet.timetuple()))] #get last posts newer than last one posted
 
-        for submission in rPost: #Remove the tried ids
+        for submission in rPost: #Remove the tried posts
             if submission.id in triedIds:
                 rPost.remove(submission.id)
 
         if len(rPost) == 0:
-            print("No posts aviable in dankmemes, sleeping") #if no posts aviable, sleep for a while
+            print("No posts aviable in dankmemes, sleeping") #If no posts aviable, sleep for a while
 
             tries += 1
-            if tries > TIMEBETWEENTWEETS / TIMEIFFAIL:
+            if tries > TIMEBETWEENTWEETS / TIMEIFFAIL: #If tried too many times, get posts from HOT
                 getHot = True
                 continue
 
             time.sleep(TIMEIFFAIL)
         else: break
 
-    post = rPost[random.randint(0, len(rPost) - 1)]
+    post = rPost[random.randint(0, len(rPost) - 1)] #Select a random post
     triedIds.append(post.id)
 
     imgPathJ = "temp.jpg"
     imgPathP = "temp.png"
-    data = urllib.request.urlretrieve(post.url, imgPathJ) #get image from post and download
+    data = urllib.request.urlretrieve(post.url, imgPathJ) #Get image from post and download
 
     with Image.open(imgPathJ) as img:
         clip = getClip(img)
@@ -155,7 +154,7 @@ def getImage():
                 return getImage()
 
         if clipped.size[0] / clipped.size[1] < 0.5 or clipped.size[0] / clipped.size[1] > 2: #If cropped image is not proportioned
-            clipped = clipped.crop([(clipped.size[0] - minSize) / 2, (clipped.size[1] - minSize) / 2, clipped.size[0] - (clipped.size[0] - minSize) / 2, clipped.size[1] - (clipped.size[1] - minSize) / 2]) #if not too small, clip it, and recrop
+            clipped = clipped.crop([(clipped.size[0] - minSize) / 2, (clipped.size[1] - minSize) / 2, clipped.size[0] - (clipped.size[0] - minSize) / 2, clipped.size[1] - (clipped.size[1] - minSize) / 2]) #If not too small, clip it, and recrop
             clipped = clipped.crop(getClip(clipped))
 
         clipped.save(imgPathP)
@@ -170,11 +169,12 @@ def getQuote():
 
         tries = 0
         timeLastTweet = datetime.datetime.now() - datetime.timedelta(seconds = TIMEBETWEENTWEETS)
-    
+        
+        #Do same as in getImage() 
         if getHot:
-            rPost = [post for post in getReddit().subreddit("quotes").hot(limit = 50)] #Same as images
+            rPost = [post for post in getReddit().subreddit("quotes").hot(limit = 50)]
         else:
-            rPost = [post for post in getReddit().subreddit("quotes").submissions(start = time.mktime(timeLastTweet.timetuple()))] #do same as in images
+            rPost = [post for post in getReddit().subreddit("quotes").submissions(start = time.mktime(timeLastTweet.timetuple()))]
 
         for submission in rPost:
             if submission.id in triedIds:
@@ -184,7 +184,7 @@ def getQuote():
             print("No posts aviable in quotes, sleeping")
 
             tries += 1
-            if tries > TIMEBETWEENTWEETS / TIMEIFFAIL: #If we tried a lot of times, get Hot posts instead
+            if tries > TIMEBETWEENTWEETS / TIMEIFFAIL:
                 getHot = True
                 continue
 
@@ -219,7 +219,7 @@ def getQuote():
 
     for i in range(random.randint(2, 5)):
         num = random.randint(0, len(emotes) - 1)
-        Quote += emotes[num] + emotes[num] #add two times the same emoji
+        Quote += emotes[num] + emotes[num] #Select a random emoji a random number of times, and add two times the same emoji
 
     return Quote
 
@@ -242,7 +242,7 @@ def runBot():
             continue
 
         try:
-            getTwitter().update_with_media(img, status = quote) #send tweet (without quotes)
+            getTwitter().update_with_media(img, status = quote) #Send tweet (without quotes)
 
         except tweepy.TweepError as e:
             if e.api_code:
@@ -254,12 +254,12 @@ def runBot():
 
         print("tweet sent") 
 
-        os.remove(img) #remove the image
+        os.remove(img) #Remove the image
 
-        triedIds = [] #reset tried ids
+        triedIds = [] #Reset tried ids
 
         getHot = False
 
-        time.sleep(TIMEBETWEENTWEETS)
+        time.sleep(TIMEBETWEENTWEETS) #Sleep
 
 runBot()
