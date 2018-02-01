@@ -230,8 +230,6 @@ def runBot():
             quote = getQuote()
             img = getImage()
 
-            continue
-
         except prawcore.exceptions.ResponseException: #If some connection fails, retry after fail time
             print("Unable to access reddit, sleeping")
             time.sleep(TIMEIFFAIL)
