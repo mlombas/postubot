@@ -50,7 +50,7 @@ def getClip(img, treshold = 0.15):
     rgbImg = img.copy().convert("RGB")
     rgbPix = rgbImg.load()
 
-    bounds = [0, 0, rgbImg.size[0], rgbImg.size[1]]
+    bounds = [x for x in rgbImg.getbbox()]
 
     #From top to bottom
     for y in range(1, rgbImg.size[1]): #Loop through every pixel
@@ -59,7 +59,7 @@ def getClip(img, treshold = 0.15):
         for x in range(0, rgbImg.size[0]):
             R, G, B = rgbPix[x, y]
             diff = max(abs(R - G), abs(G - B), abs(R - B)) #Get max difference between pixels
-            if diff > 60: #If difference its not too big, its a scale of gray    
+            if diff > 40: #If difference its not too big, its a scale of gray    
                 Found += 1
             
         if Found / rgbImg.size[1] > treshold: #If there are too much non gray pixels, we found the crop point
@@ -73,7 +73,7 @@ def getClip(img, treshold = 0.15):
         for x in range(0, rgbImg.size[0]):
             R, G, B = rgbPix[x, y]
             diff = max(abs(R - G), abs(G - B), abs(R - B))
-            if diff > 60:
+            if diff > 40:
                 Found += 1
             
         if Found / rgbImg.size[1] > treshold:
@@ -87,7 +87,7 @@ def getClip(img, treshold = 0.15):
         for y in range(1, rgbImg.size[1]):            
             R, G, B = rgbPix[x, y]
             diff = max(abs(R - G), abs(G - B), abs(R - B))
-            if diff > 60:
+            if diff > 40:
                 Found += 1
             
         if Found / rgbImg.size[0] > treshold:
@@ -101,7 +101,7 @@ def getClip(img, treshold = 0.15):
         for y in range(0, rgbImg.size[1]):      
             R, G, B = rgbPix[x, y]
             diff = max(abs(R - G), abs(G - B), abs(R - B))
-            if diff > 60:
+            if diff > 40:
                 Found += 1
             
         if Found / rgbImg.size[0] > treshold:
@@ -149,11 +149,14 @@ def getImage():
         clip = getClip(img)
         clipped = img.crop(clip)
 
-        if min(clipped.size[0], clipped.size[1]) < 300: #If image too small, get another
+        minSize = min(clipped.size[0], clipped.size[1])
+
+        if minSize < 300: #If image too small, get another
                 return getImage()
 
-        if clipped.size[0] / clipped.size[1] < 0.5 and clipped.size[0] / clipped.size[1] > 2: #If cropped image is not proportioned
-            clipped = clipped.crop([0, 0, min(clipped.size[0], clipped.size[1]), min(clipped.size[0], clipped.size[1])]) #if not too small, clip it
+        if clipped.size[0] / clipped.size[1] < 0.5 or clipped.size[0] / clipped.size[1] > 2: #If cropped image is not proportioned
+            clipped = clipped.crop([(clipped.size[0] - minSize) / 2, (clipped.size[1] - minSize) / 2, clipped.size[0] - (clipped.size[0] - minSize) / 2, clipped.size[1] - (clipped.size[1] - minSize) / 2]) #if not too small, clip it, and recrop
+            clipped = clipped.crop(getClip(clipped))
 
         clipped.save(imgPathP)
 
@@ -226,6 +229,8 @@ def runBot():
         try:
             quote = getQuote()
             img = getImage()
+
+            continue
 
         except prawcore.exceptions.ResponseException: #If some connection fails, retry after fail time
             print("Unable to access reddit, sleeping")
