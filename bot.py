@@ -235,6 +235,11 @@ def runBot():
             time.sleep(TIMEIFFAIL)
 
             continue
+        except prawcore.exceptions.RequestException: #If some connection fails, retry after fail time
+            print("Unable to access internet, sleeping")
+            time.sleep(TIMEIFFAIL)
+
+            continue
 
         if os.stat(img).st_size > 3072 * 1000: #If file is too big, retry
             print("File too big, retrying")
