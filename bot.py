@@ -144,23 +144,29 @@ def getImage():
     imgPathP = "temp.png"
     data = urllib.request.urlretrieve(post.url, imgPathJ) #Get image from post and download
 
-    with Image.open(imgPathJ) as img:
-        clip = getClip(img)
-        clipped = img.crop(clip)
+    try:
+        with Image.open(imgPathJ) as img:
+            clip = getClip(img)
+            clipped = img.crop(clip)
 
-        minSize = min(clipped.size[0], clipped.size[1])
+            minSize = min(clipped.size[0], clipped.size[1])
 
-        if minSize < 300: #If image too small, get another
-                return getImage()
+            if minSize < 300: #If image too small, get another
+                    return getImage()
 
-        if clipped.size[0] / clipped.size[1] < 0.5 or clipped.size[0] / clipped.size[1] > 2: #If cropped image is not proportioned
-            clipped = clipped.crop([(clipped.size[0] - minSize) / 2, (clipped.size[1] - minSize) / 2, clipped.size[0] - (clipped.size[0] - minSize) / 2, clipped.size[1] - (clipped.size[1] - minSize) / 2]) #If not too small, clip it, and recrop
-            clipped = clipped.crop(getClip(clipped))
+            if clipped.size[0] / clipped.size[1] < 0.5 or clipped.size[0] / clipped.size[1] > 2: #If cropped image is not proportioned
+                clipped = clipped.crop([(clipped.size[0] - minSize) / 2, (clipped.size[1] - minSize) / 2, clipped.size[0] - (clipped.size[0] - minSize) / 2, clipped.size[1] - (clipped.size[1] - minSize) / 2]) #If not too small, clip it, and recrop
+                clipped = clipped.crop(getClip(clipped))
 
-        clipped.save(imgPathP)
+            clipped.save(imgPathP)
 
-        os.remove(imgPathJ) #Remove jpg
-        return imgPathP
+            os.remove(imgPathJ) #Remove jpg
+
+    except OSError as e: #If fails to get the image, retry
+        time.sleep(TIMEIFFAIL)
+        getImage()
+
+    return imgPathP
 
 def getQuote():
     while True:
