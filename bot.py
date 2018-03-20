@@ -142,7 +142,12 @@ def getImage():
 
     imgPathJ = "temp.jpg"
     imgPathP = "temp.png"
-    data = urllib.request.urlretrieve(post.url, imgPathJ) #Get image from post and download
+    
+    try:
+        urllib.request.urlretrieve(post.url, imgPathJ) #Get image from post and download
+    except urllib.error.HTTPError as e:
+        if e.code == 429:
+            time.sleep(TIMEIFFAIL)
 
     try:
         with Image.open(imgPathJ) as img:
