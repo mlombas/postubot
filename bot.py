@@ -1,20 +1,3 @@
-#   This is the main file of the bot   
-# 
-#   Copyright (C) 2018  mocoma
-#
-#   This program is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation, either version 3 of the License, or
-#   (at your option) any later version.
-#
-#   This program is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License
-#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 #@postubot on twitter
 
 from secrets import * #This is the secrets file, add yours, it must have the values of the consumers secret and key and access token and secret and reddits client id, client secret and user agent under the names below, in the getTwitter() and getReddit() functions
